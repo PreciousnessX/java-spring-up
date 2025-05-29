@@ -50,31 +50,50 @@ public class UserService {
         }
 
         // 检查用户名是否已存在
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             result.put("success", false);
             result.put("message", "用户名已存在");
             return result;
         }
 
         // 检查邮箱是否已存在
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             result.put("success", false);
             result.put("message", "邮箱已被注册");
             return result;
         }
 
-        // 创建新用户
-        User user = new User();
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword()); // 实际应用中应该对密码进行加密
-        user.setEmail(request.getEmail());
-        user.setPhoneNumber(request.getPhoneNumber());
-
-        // 保存用户
-        userRepository.save(user);
-
-        result.put("success", true);
-        result.put("message", "注册成功");
+        try {
+            // 创建新用户
+            User user = new User();
+            user.setUsername(request.getUsername());
+            user.setPassword(request.getPassword()); // TODO: 在生产环境中应该对密码进行加密
+            user.setEmail(request.getEmail());
+            user.setPhoneNumber(request.getPhoneNumber());
+            
+            // 保存用户
+            userRepository.save(user);
+            
+            result.put("success", true);
+            result.put("message", "注册成功");
+            result.put("userId", user.getId());
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", "注册失败：" + e.getMessage());
+        }
+        
         return result;
+    }
+
+    /**
+     * 验证用户登录
+     * @param username 用户名
+     * @param password 密码
+     * @return 用户对象，如果验证失败返回null
+     */
+    public User validateUser(String username, String password) {
+        return userRepository.findByUsername(username)
+                .filter(user -> user.getPassword().equals(password)) // TODO: 在生产环境中应该对密码进行加密比对
+                .orElse(null);
     }
 }
