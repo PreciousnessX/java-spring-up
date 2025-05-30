@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.entity.LoginRequest;
 import com.example.demo.entity.RegisterRequest;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +18,34 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final StringRedisTemplate redisTemplate;
+
+    /**
+     * 验证登录
+     */
+    public Map<String, Object> validateLogin(LoginRequest request) {
+        Map<String, Object> result = new HashMap<>();
+        
+        User user = userRepository.findByUsername(request.getUsername())
+                .filter(u -> u.getPassword().equals(request.getPassword()))
+                .orElse(null);
+        
+        if (user == null) {
+            result.put("success", false);
+            result.put("message", "用户名或密码错误");
+            return result;
+        }
+        
+        String token = UUID.randomUUID().toString();
+        // TODO: 在实际生产环境中，应该使用更安全的方式生成和存储token
+        
+        result.put("success", true);
+        result.put("message", "登录成功");
+        result.put("token", token);
+        result.put("userId", user.getId());
+        result.put("username", user.getUsername());
+        
+        return result;
+    }
 
     /**
      * 用户注册
@@ -42,13 +72,6 @@ public class UserService {
         // 删除已使用的验证码
         redisTemplate.delete("captcha:" + request.getCaptchaId());
 
-        // 验证密码是否一致
-        if (!request.getPassword().equals(request.getConfirmPassword())) {
-            result.put("success", false);
-            result.put("message", "两次输入的密码不一致");
-            return result;
-        }
-
         // 检查用户名是否已存在
         if (userRepository.findByUsername(request.getUsername()).isPresent()) {
             result.put("success", false);
@@ -69,7 +92,6 @@ public class UserService {
             user.setUsername(request.getUsername());
             user.setPassword(request.getPassword()); // TODO: 在生产环境中应该对密码进行加密
             user.setEmail(request.getEmail());
-            user.setPhoneNumber(request.getPhoneNumber());
             
             // 保存用户
             userRepository.save(user);
@@ -83,17 +105,5 @@ public class UserService {
         }
         
         return result;
-    }
-
-    /**
-     * 验证用户登录
-     * @param username 用户名
-     * @param password 密码
-     * @return 用户对象，如果验证失败返回null
-     */
-    public User validateUser(String username, String password) {
-        return userRepository.findByUsername(username)
-                .filter(user -> user.getPassword().equals(password)) // TODO: 在生产环境中应该对密码进行加密比对
-                .orElse(null);
     }
 }

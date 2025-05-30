@@ -7,9 +7,9 @@ USE `spring_demo`;
 -- 创建用户表
 CREATE TABLE IF NOT EXISTS `users` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) NOT NULL,
-  `password` varchar(100) NOT NULL,
-  `email` varchar(100) NOT NULL,
+  `username` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
   `phone_number` varchar(20),
   `created_at` datetime,
   `updated_at` datetime,
