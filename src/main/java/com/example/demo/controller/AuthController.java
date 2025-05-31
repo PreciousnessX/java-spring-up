@@ -7,7 +7,6 @@ import com.example.demo.service.UserService;
 import com.google.code.kaptcha.impl.DefaultKaptcha;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.imageio.ImageIO;
